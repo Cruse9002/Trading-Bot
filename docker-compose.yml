@@ -1,0 +1,148 @@
+version: '3.8'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    env_file:
+      - .env
+  influxdb:
+    image: influxdb:2.0
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    env_file:
+      - .env
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    env_file:
+      - .env
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    env_file:
+      - .env
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    env_file:
+      - .env
+  market-data-collector:
+    build: ./market-data-collector
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: "json-file"
+    env_file:
+      - .env
+  social-media-collector:
+    build: ./social-media-collector
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: "json-file"
+    env_file:
+      - .env
+  news-feed-collector:
+    build: ./news-feed-collector
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: "json-file"
+    env_file:
+      - .env
+  ta-module:
+    build: ./ta-module
+    depends_on:
+      - influxdb
+      - rabbitmq
+    logging:
+      driver: "json-file"
+    env_file:
+      - .env
+  nlp-sentiment-module:
+    build: ./nlp-sentiment-module
+    depends_on:
+      - mongodb
+      - rabbitmq
+    logging:
+      driver: "json-file"
+    env_file:
+      - .env
+  market-data-consumer:
+    build: ./market-data-consumer
+    depends_on:
+      - rabbitmq
+      - influxdb
+    logging:
+      driver: "json-file"
+    env_file:
+      - .env
+  text-data-consumer:
+    build: ./text-data-consumer
+    depends_on:
+      - rabbitmq
+      - mongodb
+    logging:
+      driver: "json-file"
+    env_file:
+      - .env
+  signal-aggregator:
+    build: ./signal-aggregator
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: "json-file"
+    env_file:
+      - .env
+  strategy-engine:
+    build: ./strategy-engine
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: "json-file"
+    env_file:
+      - .env
+  risk-manager:
+    build: ./risk-manager
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: "json-file"
+    env_file:
+      - .env
+  execution-handler:
+    build: ./execution-handler
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: "json-file"
+    env_file:
+      - .env
+  position-monitor:
+    build: ./position-monitor
+    depends_on:
+      - rabbitmq
+    logging:
+      driver: "json-file"
+    env_file:
+      - .env
+volumes:
+  rabbitmq_data:
+  influxdb_data:
+  mongo_data:
+  grafana_data: 
